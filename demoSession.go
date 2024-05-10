@@ -40,4 +40,40 @@ func main() {
 		Updated time.Time `xorm:"updated"`
 	}
 
+	//5.事务应用
+	//5.1.构建事务对象
+	session := engine.NewSession()
+
+	//5.2.延迟释放
+	defer session.Close()
+
+	//5.3.开启事务
+	session.Begin()
+
+	//5.4.添加错误处理
+	defer func() {
+		err := recover()
+		if err != nil {
+			//回滚
+			fmt.Println(err)
+			fmt.Println("Rollback")
+			session.Rollback()
+		} else {
+			session.Commit()
+		}
+	}()
+
+	//6.事务内操作
+	//6.1.插入数据
+	user1 := User{Id: 10007, Name: "peixiaoze", Age: 18, Passwd: "12312312"}
+	if _, err := session.Insert(&user1); err != nil {
+		panic(err)
+	}
+
+	//6.2.修改数据
+	user2 := User{Name: "peixiaoze222", Age: 3}
+
+	if _, err := session.Where("id = 10002").Update(&user2); err != nil {
+		panic(err)
+	}
 }
